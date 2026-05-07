@@ -1,16 +1,21 @@
 import { prisma } from "@/lib/prisma";
 
+type RouteParams = Promise<{ id: string }>;
+
 // GET /api/projects/:id
-export async function GET(_: Request, { params }: any) {
+export async function GET(
+  _: Request,
+  { params }: { params: RouteParams }
+) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const projectId = Number(id);
 
     // Validate project ID
     if (isNaN(projectId)) {
       return Response.json(
         { error: "Invalid project ID" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -23,25 +28,30 @@ export async function GET(_: Request, { params }: any) {
     if (!project) {
       return Response.json(
         { error: "Project not found" },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    return Response.json(project, { status: 200 });
+    return Response.json(project, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
 
   } catch (error) {
     console.error(error);
     return Response.json(
       { error: "Failed to fetch project" },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
 
 // PUT /api/projects/:id
-export async function PUT(req: Request, { params }: any) {
+export async function PUT(
+  req: Request,
+  { params }: { params: RouteParams }
+) {
   try {
-
     const { id } = await params;
     const projectId = Number(id);
 
@@ -49,7 +59,7 @@ export async function PUT(req: Request, { params }: any) {
     if (isNaN(projectId)) {
       return Response.json(
         { error: "Invalid project ID" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -59,7 +69,7 @@ export async function PUT(req: Request, { params }: any) {
     if (!body || Object.keys(body).length === 0) {
       return Response.json(
         { error: "Request body cannot be empty" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -72,7 +82,7 @@ export async function PUT(req: Request, { params }: any) {
     if (!existing) {
       return Response.json(
         { error: "Project not found" },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -87,10 +97,14 @@ export async function PUT(req: Request, { params }: any) {
       },
     });
 
-    return Response.json(updated, { status: 200 });
+    return Response.json(updated, {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
 
-  } catch (error: any) {
-    console.error("UPDATE ERROR:", error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("UPDATE ERROR:", message);
 
     return Response.json(
       { error: "Failed to update project" },
@@ -100,7 +114,10 @@ export async function PUT(req: Request, { params }: any) {
 }
 
 // DELETE /api/projects/:id
-export async function DELETE(_: Request, { params }: any) {
+export async function DELETE(
+  _: Request,
+  { params }: { params: RouteParams }
+) {
   try {
     const { id } = await params;
 
@@ -108,7 +125,7 @@ export async function DELETE(_: Request, { params }: any) {
     if (!id || isNaN(Number(id))) {
       return Response.json(
         { error: "Invalid or missing project ID" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -116,20 +133,24 @@ export async function DELETE(_: Request, { params }: any) {
       where: { id: Number(id) },
     });
 
-    return Response.json({
-      success: true,
-      data: deleted,
-    });
+    return Response.json(
+      {
+        success: true,
+        data: deleted,
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
 
-  } catch (error: any) {
-    console.error("Delete project error:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Delete project error:", message);
 
     return Response.json(
       {
         error: "Internal server error",
-        details: error.message || "Unknown error",
+        details: message,
       },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }

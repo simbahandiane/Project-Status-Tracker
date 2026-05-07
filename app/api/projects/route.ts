@@ -7,14 +7,16 @@ export async function GET() {
     const projects = await prisma.project.findMany({
       orderBy: { updatedAt: "desc" },
     });
-    return Response.json(projects);
+    return Response.json(projects, {
+      headers: { "Content-Type": "application/json" },
+    });
 
   } catch (error) {
     console.error(error);
 
     return Response.json(
       { error: "Failed to fetch projects" },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
@@ -28,7 +30,7 @@ export async function POST(req: Request) {
     if (!body.clientName || !body.projectName || !body.status) {
       return Response.json(
         { error: "Missing required fields" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -36,12 +38,15 @@ export async function POST(req: Request) {
       data: body,
     });
 
-    return Response.json(project, { status: 201 });
+    return Response.json(project, {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
 
   } catch (error) {
     return Response.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
